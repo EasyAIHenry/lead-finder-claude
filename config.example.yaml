@@ -7,7 +7,7 @@ business:
   name: "Brightpath AI Studio"            # EXAMPLE. Your business name.
   country: "Singapore"                   # Singapore turns on the MyCareersFuture job board.
                                          # Any other country: list homepages in extra_sites.txt.
-  # Your enquiry form or booking page. {src} becomes lead-<company>, so you can see which
+  # Your enquiry form or booking page. {src} becomes a short company code (for example acme), so you can see which
   # lead filled the form. Most form tools save URL parameters if you add a hidden field called src.
   enquiry_link: "https://example.com/enquire?src={src}"
   # One short line that proves you can do it. Leave it empty ("") if you have nothing yet.
@@ -22,15 +22,17 @@ business:
 routes:
   team:
     label: "AI training for teams"
+    priority: "getting the team using AI"     # optional: the opener says "...so <priority> looks like a priority this year."
     offer: "We run hands-on AI workshops for teams and set up the workflows with them, so they keep using it after we leave."
     searches: ["AI transformation", "generative AI", "AI adoption", "AI enablement", "digital transformation",
                "learning and development", "innovation manager", "process improvement"]
     title_regex: '\bA\.?I\b|artificial intelligence|automation|generative|gen ?ai|transformation|learning (and|&) development|\bL&D\b|enablement|innovation|prompt'
     ignore_titles_regex: 'engineer|architect|developer|scientist|programmer|devops|\bML\b'
     bonus: 3
-    bonus_reason: "hiring for AI or transformation, so they have the budget and the appetite"
+    bonus_reason: "hiring for AI or transformation, a sign they are investing in it"
   content:
     label: "AI content skills for marketing teams"
+    priority: "content output"
     offer: "We train marketing teams to plan, write and edit content with AI, so one person can do the work of three."
     searches: ["content marketing", "social media executive", "video editor", "content creator",
                "brand marketing", "marketing manager", "head of marketing"]
@@ -46,6 +48,14 @@ skip_words: ["recruit", "staffing", "manpower", "talent", "employment", "agency"
              "accenture", "capgemini", "deloitte", "pwc", "kpmg", "ernst", "mckinsey", "ntt data",
              "infosys", "wipro", "tata consult", "cognizant", "randstad", "persol", "adecco", "hays",
              "michael page", "kelly", "allegis", "quess"]
+
+# Job titles that mean the company is hiring the exact thing you sell, in-house. They are flagged in
+# the "why" and lose 3 points (in_house_points), so you can decide: pitch help around that hire, or skip.
+# A video studio might use: 'video producer|videographer|video editor'
+in_house_titles_regex: 'AI trainer|corporate trainer|training specialist'
+in_house_points: -3
+
+# Current clients and anyone you are already talking to: add their names to skip_words too.
 
 # If a company's own site describes it with any of these, it scores -10 (competitor or middleman).
 competitor_words: ["agency", "consult", "executive search", "recruit", "staffing", "headhunt", "outsourc",

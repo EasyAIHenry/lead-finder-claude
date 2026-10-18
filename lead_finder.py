@@ -57,6 +57,9 @@ def load_config(path):
         r.setdefault("bonus", 0)
         r.setdefault("searches", [])
     cfg["_competitor"] = re.compile("|".join(cfg.get("competitor_words", [])) or r"$^", re.I)
+    ih = cfg.get("in_house_titles_regex")
+    cfg["_in_house"] = re.compile(ih, re.I) if ih else None
+    cfg.setdefault("in_house_points", -3)
     cfg.setdefault("skip_words", [])
     cfg.setdefault("good_industries", [])
     cfg.setdefault("size", {"big": 200, "mid": 50, "small": 20})
@@ -115,7 +118,11 @@ def job_board_signals(cfg):
                 site = home((c.get("companyUrl") or "").strip())
                 key = c.get("uen") or name
                 row = cos.setdefault(key, {"company": name, "website": site, "employees": c.get("employeeCount"),
-                                           "roles": [], "routes": set(), "job_link": "", "source": "job board"})
+                                           "roles": [], "routes": set(), "job_link": "", "posted": "",
+                                           "source": "job board"})
+                posted = (j.get("metadata") or {}).get("newPostingDate") or ""
+                if posted > row["posted"]:
+                    row["posted"] = posted
                 if site and not row["website"]:
                     row["website"] = site
                 if not row["job_link"]:
@@ -145,7 +152,7 @@ def extra_signals(cfg):
             continue
         site = home(u) or (u if u.startswith("http") else "https://" + u)
         out.append({"company": urllib.parse.urlparse(site).netloc.replace("www.", ""), "website": site,
-                    "employees": None, "roles": [], "routes": [default_route], "job_link": "",
+                    "employees": None, "roles": [], "routes": [default_route], "job_link": "", "posted": "",
                     "source": "your list"})
     return out
 
@@ -196,6 +203,10 @@ def score(c, cfg):
     else:
         pts += 3
         why.append("on your own list")
+    in_house = [t for t in c["roles"] if cfg["_in_house"] and cfg["_in_house"].search(t)]
+    if in_house:
+        pts += cfg["in_house_points"]
+        why.append(f"hiring the work you sell in-house ({in_house[0]}): pitch help around that hire, or skip")
     for rn in (c["routes"] if c["roles"] else []):   # bonus only for real job-ad matches
         r = cfg["routes"][rn]
         if r["bonus"]:
@@ -254,11 +265,15 @@ def opener(c, cfg):
     b = cfg["business"]
     rn = c["routes"][0]
     route = cfg["routes"][rn]
-    link = b["enquiry_link"].replace("{src}", "lead-" + slug(c["company"]))
+    link = b["enquiry_link"].replace("{src}", slug(c["company"]))
     if c["roles"]:
         role = smart_case(re.sub(r"\s*[\[(#].*$", "", c["roles"][0]).strip())
         art = "an" if role[:1].lower() in "aeiou" else "a"
-        hook = f"I saw {nice(c['company'])} is hiring {art} {role}."
+        if route.get("priority"):
+            hook = (f"I saw {nice(c['company'])} is hiring {art} {role}, "
+                    f"so {route['priority']} looks like a priority this year.")
+        else:
+            hook = f"I saw {nice(c['company'])} is hiring {art} {role}."
     else:
         hook = f"I came across {nice(c['company'])}."
     proof = (" " + b["proof"].strip()) if b.get("proof") else ""
@@ -328,7 +343,7 @@ def main():
     before = set()
     if os.path.exists(csv_path):
         before = {r["company"] for r in csv.DictReader(open(csv_path))}
-    fields = ["rank", "score", "company", "website", "employees", "roles", "job_link", "source", "route", "why",
+    fields = ["rank", "score", "company", "website", "employees", "roles", "job_link", "posted", "source", "route", "why",
               "contact_email", "contact_page", "linkedin", "form_link", "opener"]
     rows = []
     for i, c in enumerate(cos, 1):
@@ -336,7 +351,7 @@ def main():
         em, pg, li = contact(c)
         rows.append({"rank": i, "score": c["score"], "company": c["company"], "website": c["website"],
                      "employees": c.get("employees") or "", "roles": "; ".join(c["roles"]),
-                     "job_link": c.get("job_link", ""), "source": c["source"], "route": route,
+                     "job_link": c.get("job_link", ""), "posted": c.get("posted", ""), "source": c["source"], "route": route,
                      "why": "; ".join(c["why"]), "contact_email": em, "contact_page": pg, "linkedin": li,
                      "form_link": link, "opener": msg})
     with open(csv_path, "w", newline="") as f:
@@ -346,7 +361,8 @@ def main():
 
     print("4/4 writing the top 10...")
     md = [f"# {biz}: top 10 to reach out to", f"Run {time.strftime('%d %b %Y %H:%M')}, model {MODEL}", "",
-          "Send each message yourself, one by one. Check the company and the person before you send.", ""]
+          "Send each message yourself, one by one. Check the company and the person before you send.",
+          "Scores run up to about 22. 10 or more is worth a look. Replace {first name} before you send.", ""]
     top = [r for r in rows if r["score"] > 0][:10]
     for n, r in enumerate(top, 1):
         new = "" if not before or r["company"] in before else " NEW"
@@ -354,7 +370,7 @@ def main():
                f"- Site: {r['website']}",
                f"- Why: {r['why']}"]
         if r["job_link"]:
-            md.append(f"- Job ad: {r['job_link']}")
+            md.append(f"- Job ad: {r['job_link']}" + (f" (newest ad posted {r['posted']})" if r["posted"] else ""))
         md += [f"- Offer: {r['route']}",
                f"- Reach them: {r['contact_email'] or r['contact_page'] or r['linkedin'] or 'find the right person on LinkedIn'}",
                f"- Form link: {r['form_link']}", "", "> " + r["opener"], ""]

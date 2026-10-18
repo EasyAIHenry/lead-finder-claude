@@ -28,9 +28,12 @@ Ask these one at a time and wait for each answer:
 Then copy `config.example.yaml` to `config.yaml` and change it:
 
 - `business.name`, `business.country`, `business.proof` (ask for one real result they can stand behind, or leave it `""`; never invent one), `business.call_to_action`.
-- `business.enquiry_link`: their link with `src={src}` added (`?src={src}`, or `&src={src}` if it already has a `?`). Keep any `#anchor` at the end. Tell them to add a hidden field called `src` to their form so each enquiry shows the lead it came from.
+- `business.enquiry_link`: their link with `src={src}` added (`?src={src}`, or `&src={src}` if it already has a `?`). Keep any `#anchor` at the end. Tell them to add a hidden field called `src` to their form so each enquiry shows the lead it came from. Form tools such as Tally, Typeform and Jotform can fill a hidden field from the link. A booking page that only keeps UTM tags (Calendly, for example) needs `utm_source={src}` instead of `src={src}`.
 - `routes`: one route per thing they sell. For each, write a one-sentence `offer` in their words (plain, no hype, no exclamation marks), pick job-board `searches` that signal a company needs it, and write a `title_regex` that only real matching job titles pass. Give the strongest buying signal a `bonus` of 3.
-- `skip_words` and `competitor_words`: add their own competitors (for example, a video studio adds "production", "studio", "film").
+- `skip_words` and `competitor_words`: ask them to name their competitors and current clients, and add those names to `skip_words`. Add competitor words too (for example, a video studio adds "production", "studio", "film").
+- `in_house_titles_regex`: the job titles that mean a company is hiring the exact thing they sell (a video studio: `video producer|videographer|video editor`). These are flagged, not dropped.
+- `priority` per route: a short phrase for the opener's first sentence, for example "employer branding". The opener then reads "I saw X is hiring a Y, so employer branding looks like a priority this year."
+- `size`: set `big` and `mid` to fit the company sizes they sell to. Staff counts come from the job board, not the model.
 - `good_industries`: the industries they sell to.
 - Delete the example values. Nothing about "Brightpath AI Studio" should remain.
 
@@ -47,7 +50,7 @@ Show them the finished `config.yaml` in plain words (not YAML) and ask if it loo
 
 ## 4. Read the results with them
 
-Open `output/top10.md`. For each lead, say in one line why it is there, what the best contact route is, and anything that looks wrong (a competitor, an empty site, a company that is too small). Offer to add competitors to `skip_words` and run again. `output/all_leads.csv` has every company, including the ones that scored 0 or less and why.
+Open `output/top10.md`. For each lead, say in one line why it is there, what the best contact route is, and anything that looks wrong (a competitor, an empty site, a company that is too small). Offer to add competitors to `skip_words` and run again. If a job title matched for the wrong reason (for example "Finance Operations & Transformation" matching "transformation"), tighten that route's `title_regex`. Scores run up to about 22; 10 or more is worth a look. `output/all_leads.csv` has every company, including the ones that scored 0 or less and why.
 
 ## 5. Safety and sending rules
 
@@ -59,4 +62,4 @@ Open `output/top10.md`. For each lead, say in one line why it is there, what the
 
 ## 6. Run it every weekday (only if they ask)
 
-Offer the launchd or cron example from README.md, filled in with their real folder path, or a scheduled task in the Claude desktop app. Tell them the computer must be awake and Ollama running at that time, and that a missed run does not catch up.
+Offer the launchd or cron example from README.md, filled in with their real folder path and logging to `output/run.log`, or a scheduled task in the Claude desktop app. Tell them the computer must be awake and Ollama running at that time, and that a missed run does not catch up.

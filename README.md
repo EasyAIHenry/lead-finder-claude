@@ -74,14 +74,15 @@ Use a smaller, faster, weaker model: `LEAD_MODEL=ollama/llama3.2 .venv/bin/pytho
 | `business.country` | `Singapore` turns on the job board. Anything else uses `extra_sites.txt` only |
 | `business.enquiry_link` | Your form or booking page with `{src}` in it, for example `https://yoursite.com/contact?src={src}` |
 | `business.proof` | One line that proves you can do it (optional) |
-| `routes` | One block per thing you sell: the opener line, job-board searches, the job titles that count, bonus points |
-| `skip_words` | Company names to drop (recruiters, competitors) |
+| `routes` | One block per thing you sell: the opener line, an optional `priority` for the first sentence, job-board searches, the job titles that count, bonus points |
+| `in_house_titles_regex` | Job titles that mean the company is hiring the exact thing you sell. Flagged in the "why", -3 points |
+| `skip_words` | Company names to drop (recruiters, competitors, current clients) |
 | `competitor_words` | Words on a company's own site that mark it as a competitor (score -10) |
 | `good_industries` | Industries that buy from you (+2 each) |
 | `size` | Staff counts for +4, +2 and -2 |
 | `max_companies` | How many websites to read per run |
 
-Every company gets its own link, for example `https://yoursite.com/contact?src=lead-acme`. Add a hidden field called `src` to your form (most form tools can fill a hidden field from the URL), and each enquiry tells you which lead it came from.
+Every company gets its own link, for example `https://yoursite.com/contact?src=acme`. Add a hidden field called `src` to your form (Tally, Typeform, Jotform, HubSpot forms and most WordPress form plugins can fill a hidden field from the link), and each enquiry tells you which lead it came from. Booking pages that only keep UTM tags, such as Calendly, need `utm_source={src}` instead.
 
 ## What to expect
 
@@ -90,6 +91,8 @@ Every company gets its own link, for example `https://yoursite.com/contact?src=l
 - **Some sites can't be read.** Big sites that block bots come back empty. They lose 3 points and are marked "check it by hand".
 - **The model makes mistakes.** It can guess an industry wrong or miss an email that is on the page. Open the site before you send anything.
 - **It finds companies, not people.** You still pick the right person and write the first line yourself.
+- **Scores.** Up to about 22. Matching job ads count most (3 each, up to 3 ads). 10 or more is worth a look. Each job ad shows its posting date, so you can see how fresh the need is.
+- **Matches can be loose.** A title like "Finance Operations & Transformation" matches the word "transformation". If a match looks wrong, tighten that route's `title_regex` or add the word to `ignore_titles_regex`.
 
 ## Fixes
 
@@ -117,6 +120,20 @@ This repo finds companies. What you send, and how, is on you.
 
 This is general information, not legal advice. Check the rules where you and your leads are.
 
+## Track it with your team
+
+Keep one shared sheet with the stages Not contacted, Messaged, Replied, Call booked, Won, Not now, and give every lead one owner. Follow up once after about 7 days, then mark it Not now. Paste this in the Code tab after each run:
+
+```text
+Make output/tracker-new.csv for Google Sheets with only the leads from output/all_leads.csv
+that scored above 0 and are not listed in output/exported.txt. Columns: company, website,
+why, job ad, contact email, contact page, LinkedIn, form link, opener, plus empty Person,
+Stage (Not contacted), Owner, Last touch, Next step. Then add those company names to
+output/exported.txt.
+```
+
+In Google Sheets, import `tracker-new.csv` with File, Import, Upload, **Append to current sheet**. Only new companies are in the file, so nothing your team typed in the sheet is touched.
+
 ## Run it every weekday
 
 The lead finder runs on your computer, so your computer must be awake and Ollama must be running at that time.
@@ -139,22 +156,22 @@ The lead finder runs on your computer, so your computer must be awake and Ollama
     <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
     <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
   </array>
-  <key>StandardOutPath</key><string>/tmp/lead-finder.log</string>
-  <key>StandardErrorPath</key><string>/tmp/lead-finder.log</string>
+  <key>StandardOutPath</key><string>/Users/YOU/Documents/lead-finder/output/run.log</string>
+  <key>StandardErrorPath</key><string>/Users/YOU/Documents/lead-finder/output/run.log</string>
 </dict></plist>
 ```
 
 **Mac or Linux, with cron** (simpler). Run `crontab -e` and add one line (8 am, Monday to Friday):
 
 ```cron
-0 8 * * 1-5 cd /Users/YOU/Documents/lead-finder && .venv/bin/python lead_finder.py >> /tmp/lead-finder.log 2>&1
+0 8 * * 1-5 cd /Users/YOU/Documents/lead-finder && .venv/bin/python lead_finder.py >> output/run.log 2>&1
 ```
 
 **Windows.** Task Scheduler, Create Basic Task, Daily, then tick weekdays only, and point it at `.venv\Scripts\python.exe` with `lead_finder.py` as the argument and the folder as "Start in".
 
 **Claude.** You can also ask Claude in the Code tab to make it a scheduled task. Scheduled tasks in the desktop app only run while the app is open and the computer is awake.
 
-If a run is missed because the computer was asleep, it does not catch up. Check `/tmp/lead-finder.log` if a morning's `top10.md` looks old. Leads that were not in the last run are marked **NEW**.
+If a run is missed because the computer was asleep, it does not catch up. Check `output/run.log` if a morning's `top10.md` looks old. Leads that were not in the last run are marked **NEW**.
 
 ## Credits
 
