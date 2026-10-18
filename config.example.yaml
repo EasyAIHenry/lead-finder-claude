@@ -47,7 +47,8 @@ skip_words: ["recruit", "staffing", "manpower", "talent", "employment", "agency"
              "school", "learning", "education centre",
              "accenture", "capgemini", "deloitte", "pwc", "kpmg", "ernst", "mckinsey", "ntt data",
              "infosys", "wipro", "tata consult", "cognizant", "randstad", "persol", "adecco", "hays",
-             "michael page", "kelly", "allegis", "quess"]
+             "michael page", "kelly", "allegis", "quess", "morgan mckinley", "robert walters",
+             "robert half", "manpowergroup"]
 
 # Job titles that mean the company is hiring the exact thing you sell, in-house. They are flagged in
 # the "why" and lose 3 points (in_house_points), so you can decide: pitch help around that hire, or skip.

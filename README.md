@@ -15,11 +15,11 @@ No API key. No monthly fee. Nothing is sent for you: you read the list and send 
 1. **Signals.** A company hiring an "AI transformation manager" or a "content marketing executive" has a budget and a gap. In Singapore the lead finder reads the public [MyCareersFuture](https://www.mycareersfuture.gov.sg/) job board (free, no key). In any country you can list homepages in `extra_sites.txt`.
 2. **Read.** [ScrapeGraphAI](https://github.com/ScrapeGraphAI/Scrapegraph-ai) opens each homepage in a hidden browser, and a local model in [Ollama](https://ollama.com) pulls out what the company does, its industry, where it works and any public contact route.
 3. **Score.** Plain rules from your `config.yaml`: matching roles, company size, industry, more than one country, already posts content, a contact route found. Recruiters, agencies and competitors are dropped. The rules are fixed, so the ranking only moves when the job ads or the websites change.
-4. **Write.** `output/top10.md` (read this) and `output/all_leads.csv` (every company, ranked). A dated copy goes in `output/history/`.
+4. **Write.** `output/top10.md` (read this) and `output/all_leads.csv` (every company it read, ranked). A dated copy goes in `output/history/`.
 
 ## Set it up with Claude (the easy route)
 
-You need the Claude desktop app, a Mac or Windows PC with about 8 GB of free disk, and 15 to 30 minutes (most of it is downloads).
+You need the Claude desktop app, a Mac or Windows PC with about 7 GB of free disk, and about 20 minutes (most of it is downloads).
 
 1. Open the Claude desktop app and click the **Code** tab.
 2. Pick a folder to work in, for example your Documents folder.
@@ -78,11 +78,11 @@ Use a smaller, faster, weaker model: `LEAD_MODEL=ollama/llama3.2 .venv/bin/pytho
 | `in_house_titles_regex` | Job titles that mean the company is hiring the exact thing you sell. Flagged in the "why", -3 points |
 | `skip_words` | Company names to drop (recruiters, competitors, current clients) |
 | `competitor_words` | Words on a company's own site that mark it as a competitor (score -10) |
-| `good_industries` | Industries that buy from you (+2 each) |
+| `good_industries` | Industries that buy from you (+2 if the company's industry matches one) |
 | `size` | Staff counts for +4, +2 and -2 |
 | `max_companies` | How many websites to read per run |
 
-Every company gets its own link, for example `https://yoursite.com/contact?src=acme`. Add a hidden field called `src` to your form (Tally, Typeform, Jotform, HubSpot forms and most WordPress form plugins can fill a hidden field from the link), and each enquiry tells you which lead it came from. Booking pages that only keep UTM tags, such as Calendly, need `utm_source={src}` instead.
+Every company gets its own link, for example `https://yoursite.com/contact?src=acme`. Add a hidden field called `src` to your form (Tally, Jotform, HubSpot forms and most WordPress form plugins can fill a hidden field from the link; Typeform reads hidden fields after a `#`, so use `#src={src}` there), and each enquiry tells you which lead it came from. Booking pages that only keep UTM tags, such as Calendly, need `utm_source={src}` instead.
 
 ## What to expect
 
@@ -98,9 +98,9 @@ Every company gets its own link, for example `https://yoursite.com/contact?src=a
 
 | Problem | Fix |
 |---|---|
-| `pip` installs ScrapeGraphAI 1.20.1, or imports fail | You are on Python older than 3.12 (the Mac's built-in `python3` is 3.9). Run `./scripts/setup.sh`, which refuses old Python |
+| `No matching distribution found for scrapegraphai>=2.3.1`, ScrapeGraphAI 1.20.1 installed, or imports fail | You are on Python older than 3.12 (the Mac's built-in `python3` is 3.9). Run `./scripts/setup.sh`, which refuses old Python |
 | `Executable doesn't exist` (Playwright) | `.venv/bin/python -m playwright install chromium` |
-| `Connection refused` on port 11434 | Ollama is not running. Open the Ollama app, or run `ollama serve` |
+| `Connection refused` on port 11434, or every new site says "couldn't be read" | Ollama is not running. Open the Ollama app, or run `ollama serve` |
 | `model "qwen2.5:7b-instruct" not found` | `ollama pull qwen2.5:7b-instruct` |
 | Every row is empty | The model is too small or the site blocks bots. Try `qwen2.5:7b-instruct`, and check the site opens in your browser |
 | `The parsed content is empty` in the output | That site blocked the hidden browser or loads everything with scripts. The run carries on and marks it "check it by hand" |
@@ -115,7 +115,7 @@ This repo finds companies. What you send, and how, is on you.
 - **Send one by one.** Read the site, find the right person, change the first line, then send. Do not paste the whole list into a mail-merge.
 - **Singapore, email.** The Spam Control Act covers commercial email sent in bulk (more than 100 similar messages in 24 hours, 1,000 in 30 days or 10,000 in a year). Bulk commercial email needs `<ADV>` with a space at the start of the subject, your real name and contact details, and a working unsubscribe. Honour unsubscribes within 10 business days.
 - **Singapore, PDPA.** Business contact information (a person's name, job title, work email and work phone, given for business) is outside most of the PDPA's data protection rules. Personal emails and personal phone numbers are not. Check the Do Not Call registry before you call or text a Singapore number.
-- **UK.** Emailing a company's general address is generally fine if you say who you are and give an opt-out. Sole traders and partnerships count as individuals and need consent first. Every cold email needs an unsubscribe line.
+- **UK.** Marketing email to a limited company's address is allowed without consent, as long as you say who you are and offer a way to opt out. Sole traders and most partnerships are treated as individuals, so get their consent first.
 - **Everywhere.** Only use what the company publishes itself. Respect each site's terms. Stop when someone says no.
 
 This is general information, not legal advice. Check the rules where you and your leads are.
@@ -126,17 +126,18 @@ Keep one shared sheet with the stages Not contacted, Messaged, Replied, Call boo
 
 ```text
 Make output/tracker-new.csv for Google Sheets with only the leads from output/all_leads.csv
-that scored above 0 and are not listed in output/exported.txt. Columns: company, website,
-why, job ad, contact email, contact page, LinkedIn, form link, opener, plus empty Person,
-Stage (Not contacted), Owner, Last touch, Next step. Then add those company names to
-output/exported.txt.
+that scored above 0 and are not listed in output/exported.txt. Use tidy company names as in
+top10.md. Columns: Company, Website, Why, Job ad, Contact email, Contact page, LinkedIn,
+Form link, Opener, plus empty Person, Stage (Not contacted), Owner, Last touch, Next step.
+Include the header row only if output/exported.txt does not exist yet. Then add those
+company names to output/exported.txt.
 ```
 
 In Google Sheets, import `tracker-new.csv` with File, Import, Upload, **Append to current sheet**. Only new companies are in the file, so nothing your team typed in the sheet is touched.
 
 ## Run it every weekday
 
-The lead finder runs on your computer, so your computer must be awake and Ollama must be running at that time.
+The lead finder runs on your computer, so the computer must be switched on and Ollama must be running.
 
 **Mac, with launchd** (survives restarts). Save this as `~/Library/LaunchAgents/com.leadfinder.daily.plist`, change the two paths, then run `launchctl load ~/Library/LaunchAgents/com.leadfinder.daily.plist`:
 
@@ -171,7 +172,7 @@ The lead finder runs on your computer, so your computer must be awake and Ollama
 
 **Claude.** You can also ask Claude in the Code tab to make it a scheduled task. Scheduled tasks in the desktop app only run while the app is open and the computer is awake.
 
-If a run is missed because the computer was asleep, it does not catch up. Check `output/run.log` if a morning's `top10.md` looks old. Leads that were not in the last run are marked **NEW**.
+With launchd, if the Mac is asleep at 8 am the run starts when it wakes. If the Mac is off, that day is skipped. Cron skips any run it misses. Check `output/run.log` if a morning's `top10.md` looks old. Leads that were not in the last run are marked **NEW**.
 
 ## Credits
 

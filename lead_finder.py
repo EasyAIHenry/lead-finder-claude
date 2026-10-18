@@ -105,7 +105,12 @@ def job_board_signals(cfg):
                 print(f"   search failed: {q} ({str(e)[:60]})")
                 continue
             for j in jobs:
-                c = j.get("hiringCompany") or j.get("postedCompany") or {}
+                meta = j.get("metadata") or {}
+                c = j.get("hiringCompany") or {}
+                if not c.get("name"):
+                    if meta.get("isPostedOnBehalf"):
+                        continue   # a recruiter posted it and hid the client, so there is no one to contact
+                    c = j.get("postedCompany") or {}
                 name = (c.get("name") or "").strip()
                 if not name or skipped(name, cfg):
                     continue
