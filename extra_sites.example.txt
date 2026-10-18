@@ -1,0 +1,7 @@
+# Homepages you want the lead finder to read, one per line. Works for any country.
+# Copy this file to extra_sites.txt. Lines that start with # are ignored.
+# Outside Singapore, this file is where all your companies come from.
+# Ask Claude to fill it: "List 20 homepage URLs of [type of company] in [country] that [signal,
+# for example are hiring a marketing manager or just opened a second shop]. Homepages only."
+# Check every URL opens before you run it.
+https://www.example.com/

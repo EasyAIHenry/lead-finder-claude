@@ -1,0 +1,66 @@
+# EXAMPLE CONFIG. "Brightpath AI Studio" is a made-up business, used only to show the format.
+# Copy this file to config.yaml and replace every value with your own.
+# Easiest way: open this folder in Claude's Code tab and say "set me up". Claude asks you four
+# questions and fills config.yaml for you.
+
+business:
+  name: "Brightpath AI Studio"            # EXAMPLE. Your business name.
+  country: "Singapore"                   # Singapore turns on the MyCareersFuture job board.
+                                         # Any other country: list homepages in extra_sites.txt.
+  # Your enquiry form or booking page. {src} becomes lead-<company>, so you can see which
+  # lead filled the form. Most form tools save URL parameters if you add a hidden field called src.
+  enquiry_link: "https://example.com/enquire?src={src}"
+  # One short line that proves you can do it. Leave it empty ("") if you have nothing yet.
+  proof: "Our last workshop got a 40-person retail team using AI every day within a month."
+  call_to_action: "If that could help, tell us what your team needs here and we'll reply within a day"
+
+# One route per thing you sell. The first route a company matches decides its opener.
+# searches:     words typed into the job board search (Singapore only).
+# title_regex:  a job title must match this to count (the board's search is loose).
+# ignore_titles_regex: titles to drop for this route, for example people who build the thing you sell.
+# bonus:        extra points when a company matches this route.
+routes:
+  team:
+    label: "AI training for teams"
+    offer: "We run hands-on AI workshops for teams and set up the workflows with them, so they keep using it after we leave."
+    searches: ["AI transformation", "generative AI", "AI adoption", "AI enablement", "digital transformation",
+               "learning and development", "innovation manager", "process improvement"]
+    title_regex: '\bA\.?I\b|artificial intelligence|automation|generative|gen ?ai|transformation|learning (and|&) development|\bL&D\b|enablement|innovation|prompt'
+    ignore_titles_regex: 'engineer|architect|developer|scientist|programmer|devops|\bML\b'
+    bonus: 3
+    bonus_reason: "hiring for AI or transformation, so they have the budget and the appetite"
+  content:
+    label: "AI content skills for marketing teams"
+    offer: "We train marketing teams to plan, write and edit content with AI, so one person can do the work of three."
+    searches: ["content marketing", "social media executive", "video editor", "content creator",
+               "brand marketing", "marketing manager", "head of marketing"]
+    title_regex: 'video|content|social media|multimedia|brand (manager|marketing|executive)|campaign|marketing manager|head of marketing|marketing director'
+    bonus: 0
+
+# Company names that contain any of these are dropped before anything is read.
+# Recruiters post jobs for other companies. Consultancies and training schools would be
+# competitors for this example. Add a name here any time a competitor shows up in your top 10.
+skip_words: ["recruit", "staffing", "manpower", "talent", "employment", "agency", "consult", "search",
+             " hr ", "resource", "personnel", "hunt", "advisory", "training", "institute", "academy",
+             "school", "learning", "education centre",
+             "accenture", "capgemini", "deloitte", "pwc", "kpmg", "ernst", "mckinsey", "ntt data",
+             "infosys", "wipro", "tata consult", "cognizant", "randstad", "persol", "adecco", "hays",
+             "michael page", "kelly", "allegis", "quess"]
+
+# If a company's own site describes it with any of these, it scores -10 (competitor or middleman).
+competitor_words: ["agency", "consult", "executive search", "recruit", "staffing", "headhunt", "outsourc",
+                   "training provider", "corporate training", "it services", "system integrat"]
+
+# Industries that buy what you sell. Each match is +2.
+good_industries: ["bank", "financ", "insur", "retail", "food", "beverage", "consumer", "beauty", "hospitality",
+                  "hotel", "travel", "property", "real estate", "technology", "telecom", "healthcare",
+                  "logistics", "automotive"]
+
+# Staff counts from the job board. big = +4, mid = +2, under small = -2.
+size: {big: 200, mid: 50, small: 20}
+
+max_companies: 40          # how many websites to read per run (about 25 s each on a local model)
+# use_job_board: true      # uncomment to force the Singapore job board on or off
+# default_route: team      # the route used for sites in extra_sites.txt (default: the first route)
+extra_sites_file: "extra_sites.txt"
+output_dir: "output"
